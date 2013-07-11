@@ -6,11 +6,12 @@ import Helpers._
 
 import common._
 import http._
-import js.jquery.JQuery14Artifacts
+
 import sitemap._
 import Loc._
 import mapper._
-
+import net.liftmodules.JQueryModule
+import js.jquery.JQueryArtifacts
 import code.model._
 
 /**
@@ -54,7 +55,11 @@ class Boot {
     // each page, just comment this line out.
     LiftRules.setSiteMapFunc(() => sitemapMutators(sitemap))
 
-    LiftRules.jsArtifacts = JQuery14Artifacts
+    //Init the jQuery module, see http://liftweb.net/jquery for more information.
+    LiftRules.jsArtifacts = JQueryArtifacts
+    JQueryModule.InitParam.JQuery = JQueryModule.JQuery172
+    JQueryModule.init()
+
 
     //Show the spinny image when an Ajax call starts
     LiftRules.ajaxStart =
@@ -112,7 +117,7 @@ object FileUpload extends RestHelper with Logger {
       // This is a tad bit of a hack, but we need to return text/plain, not JSON
       val jr = JsonResponse(ojv).toResponse.asInstanceOf[InMemoryResponse]
       InMemoryResponse(jr.data, ("Content-Length", jr.data.length.toString) ::
-        ("Content-Type", "text/plain") :: S.getHeaders(Nil),
+        ("Content-Type", "text/plain") :: S.getResponseHeaders(Nil),
         S.responseCookies, 200)
     }
 

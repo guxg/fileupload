@@ -9,32 +9,32 @@
     <h2>Welcome to your project!</h2>
 
     <p>
-	<span class="lift:helloWorld.howdy">
-	  Welcome to your Lift app at <span id="time">Time goes here</span>
-	</span>
+    	<span class="lift:helloWorld.howdy">
+    	  Welcome to your Lift app at <span id="time">Time goes here</span>
+    	</span>
 
-<div id="file_upload" >
-    <form action="/upload/thing" method="POST" enctype="multipart/form-data">
-          <div class="fileupload-buttonbar">
-            <span class="fileinput-button">
-              <span>Choose file...</span>
-              <input type="file" name="files" multiple="multiple"/ class="lift:FuncMe">
-            </span>
-            <button type="submit" class="start">Start upload</button>
-            <button type="reset" class="cancel">Cancel upload</button>
-            <button type="button" class="delete">Delete files</button>
-          </div>
-          <div class="fileupload-content">
-            <table class="files">
-              <tbody></tbody>
-            </table>
-		  <div class="fileupload-progressbar"></div>
-          </div>
-</form>
-</div>
-Meow
+        <div id="file_upload" >
+            <form action="/upload/thing" method="POST" enctype="multipart/form-data">
+                  <div class="fileupload-buttonbar">
+                    <span class="fileinput-button">
+                      <span>Choose file...</span>
+                      <input type="file" name="files">
+                    </span>
+                    <button type="submit" class="start">Start upload</button>
+                    <button type="reset" class="cancel">Cancel upload</button>
+                    <button type="button" class="delete">Delete files</button>
+                  </div>
+                  <div class="fileupload-content">
+                    <table class="files">
+                      <tbody></tbody>
+                    </table>
+        		  <div class="fileupload-progressbar"></div>
+                  </div>
+            </form>
+        </div>
+        Meow
 
-         <table id="files"></table>
+        <table id="files"></table>
     </p>
 
     <tail>
