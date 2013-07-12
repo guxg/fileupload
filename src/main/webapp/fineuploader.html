@@ -8,7 +8,7 @@
   <body>
 
     <div>
-        <div class="">hello</div>
+        <div id="fineu">hello</div>
         <div id="jquery-wrapped-fine-uploader" style="float:right;"></div>
     </div>
 
@@ -21,16 +21,17 @@
     <script>
       $(document).ready(function () {
         $('#jquery-wrapped-fine-uploader').fineUploader({
+            debug: true,            
             request: {
                 endpoint: 'upload/fine',
-                param: {uid:1000000},
-                paramsInBody: false
+                params: {uid:1000000},
+                paramsInBody: true
             },
             validation:{
                 allowedExtensions: ['png','jpg','jpeg'],
                 acceptFiles: ['png','jpg','jpeg'],
                 sizeLimit: 10000000, /*1024*1024＝1048576 bytes*/
-                itemLimit:1
+                itemLimit:0
             },
             messages:{
                 typeError:"{file}：无效的文件类型，支持的图片类型为:{extensions}。",
@@ -42,10 +43,18 @@
             editFilename: {
                 enabled: false
             },
-            autoUpload: false,
+            autoUpload: true,
             text: {
                 sizeSymbols:['kB','MB']
+            },
+            retry: {
+               enableAuto: true, // defaults to false
+               maxAutoAttempts: 5
             }
+        });
+        
+        $('#jquery-wrapped-fine-uploader').on('upload',function(event,id,name){
+            $('#jquery-wrapped-fine-uploader').find(".qq-upload-success").each(function(){$(this).remove();});
         });
 
         $('#triggerUpload').click(function() {
