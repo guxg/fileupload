@@ -18,7 +18,7 @@ import code.model._
  * A class that's instantiated early and run.  It allows the application
  * to modify lift's environment
  */
-class Boot {
+class Boot extends Loggable{
   def boot {
     if (!DB.jndiJdbcConnAvailable_?) {
       val vendor =
@@ -44,7 +44,7 @@ class Boot {
     def sitemap = SiteMap(
       Menu.i("Home") / "index" >> User.AddUserMenusAfter, // the simple way to declare a menu
 
-      Menu.i("FileUploader") / "fileuploader", // the simple way to declare a menu
+      Menu.i("FineUploader") / "fineuploader", // the simple way to declare a menu
 
       // more complex because this menu allows anything in the
       // /static path to be visible
@@ -61,7 +61,6 @@ class Boot {
     LiftRules.jsArtifacts = JQueryArtifacts
     JQueryModule.InitParam.JQuery = JQueryModule.JQuery172
     JQueryModule.init()
-
 
     //Show the spinny image when an Ajax call starts
     LiftRules.ajaxStart =
@@ -82,6 +81,29 @@ class Boot {
       new Html5Properties(r.userAgent))
 
     FileUpload.init()
+    FineUpload.init()
+    
+    // Set max file upload to 200mb 
+    LiftRules.maxMimeSize = 200 * 1024 * 1024
+
+    LiftRules.maxMimeFileSize = 200 * 1024 * 1024
+
+    logger.info("Uploaded files will be written to temporary location:%s".format(System.getProperty("java.io.tmpdir")));
+
+    /**
+     * If you hit the size limit, an exception will be thrown from the underlying file upload library.
+     * Be aware that the container (Jetty, Tomcat) or any web server (Apache, Nginx) may also have limits on file upload sizes.
+     * You will recognise this situation by an error such as java.lang.IllegalStateException: Form too large705784>200000.
+     * Check with documentation for the container for changing these limits.
+     */
+    //LiftRules.exceptionHandler.prepend {
+    //  case (_, _, x: FileUploadIOException) =>
+    //    ResponseWithReason(BadResponse(), "Unable to process file. Too large?")
+    //}
+
+    //Make sure we don't put stuff in memory for uploads
+    LiftRules.handleMimeFile = OnDiskFileParamHolder.apply
+    
 
     LiftRules.progressListener = {
       val opl = LiftRules.progressListener
@@ -102,6 +124,7 @@ class Boot {
 import rest._
 import json._
 import JsonDSL._
+
 object FileUpload extends RestHelper with Logger {
   serve {
     case "upload" :: "thing" :: Nil Post req => {
@@ -139,4 +162,79 @@ object FileUpload extends RestHelper with Logger {
 
     LiftRules.dispatch.append(this)
   }
+}
+
+object FineUpload extends RestHelper with Loggable {
+  serve {
+    
+    case "upload" :: "fine" :: Nil Post AllowedMimeTypes(req)  => {
+      
+      val uploads = req.uploadedFiles
+      
+      for (file <- req.uploadedFiles) {
+        logger.debug("Received: " + file.fileName)
+      }
+      
+      val resp:JValue = uploads.map(fph =>
+          ("success" -> true) ~
+            ( "name" -> fph.fileName) ~
+            ("size" -> fph.length) ~
+            ("newUuid" -> S.param("uid").openOr("missing") )
+            ).headOption.getOrElse( ("success" -> false))
+           
+            
+            
+      val ojv: List[JObject] =
+        uploads.map(fph =>
+          ("success" -> true) ~
+            ( "name" -> fph.fileName) ~
+            ("size" -> fph.length) ~
+            ("newUuid" -> S.param("uid").openOr("missing") )
+            )
+
+      // run callbacks
+      //      S.session.map(_.runParams(req))
+      // This is a tad bit of a hack, but we need to return text/plain, not JSON
+      val jr = JsonResponse(resp).toResponse.asInstanceOf[InMemoryResponse]
+      InMemoryResponse(jr.data, ("Content-Length", jr.data.length.toString) ::
+        ("Content-Type", "text/plain") :: S.getResponseHeaders(Nil),
+        S.responseCookies, 200)
+    }
+
+  }
+
+  def init() = {
+    
+    //rewrite so the rest-callback will be a param instead to be fired with LiftSession.runParams
+    LiftRules.statelessRewrite.append {
+      case RewriteRequest(ParsePath("upload" :: "fine" :: callback :: Nil, "", true, _), _, _) =>
+        RewriteResponse("upload" :: "fine" :: Nil, Map("callback" -> "_"))
+    }
+
+    LiftRules.dispatch.append(this)
+  }
+}
+
+
+
+
+object AllowedMimeTypes extends Loggable {
+  def unapply(req: Req): Option[Req] = {
+    logger.info("req.uploadedFiles.map{_.mimeType) is %s".format(req.uploadedFiles.map{_.mimeType}))
+    req.uploadedFiles.flatMap{_.mimeType match {
+      case "image/bmp"            => Some(req)
+      case "image/x-windows-bmp"  => Some(req)
+      case "image/vnd.dwg"        => Some(req)
+      case "image/gif"            => Some(req)
+      case "image/x-icon"         => Some(req)
+      case "image/jpeg"           => Some(req)
+      case "image/pict"           => Some(req)
+      case "image/png"            => Some(req)
+      case "image/x-quicktime"    => Some(req)
+      case "image/tiff"           => Some(req)
+      case "image/x-tiff"         => Some(req)
+      case _                      => None
+    }}.headOption
+  }
+ 
 }

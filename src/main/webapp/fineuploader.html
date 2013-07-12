@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Fine Uploader - jQuery Wrapper Minimal Demo</title>
+    <link href="js/fileuploader/fineuploader-3.7.0.css" rel="stylesheet">
+  </head>
+  <body>
+
+    <div>
+        <div class="">hello</div>
+        <div id="jquery-wrapped-fine-uploader" style="float:right;"></div>
+    </div>
+
+    <div id="triggerUpload" class="btn btn-primary" style="margin-top: 10px;">
+        <i class="icon-upload icon-white"></i> Upload now
+    </div>
+
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+    <script src="js/fileuploader/jquery.fineuploader-3.7.0.js"></script>
+    <script>
+      $(document).ready(function () {
+        $('#jquery-wrapped-fine-uploader').fineUploader({
+            request: {
+                endpoint: 'upload/fine',
+                param: {uid:1000000},
+                paramsInBody: false
+            },
+            validation:{
+                allowedExtensions: ['png','jpg','jpeg'],
+                acceptFiles: ['png','jpg','jpeg'],
+                sizeLimit: 10000000, /*1024*1024＝1048576 bytes*/
+                itemLimit:1
+            },
+            messages:{
+                typeError:"{file}：无效的文件类型，支持的图片类型为:{extensions}。",
+                sizeError:"{file}：图片文件太大，最大图片大小为:{sizeLimit}。",
+                emptyError:"{file}：您选择的图片大小为0，请重新选择其它图片文件。",
+                noFilesError:"请选择文件。",
+                onLeave:"文件正在上传中，如果离开此页面，文件上传将会自动取消。"
+            },
+            editFilename: {
+                enabled: false
+            },
+            autoUpload: false,
+            text: {
+                sizeSymbols:['kB','MB']
+            }
+        });
+
+        $('#triggerUpload').click(function() {
+            $('#jquery-wrapped-fine-uploader').fineUploader('uploadStoredFiles');
+        });
+    });
+    </script>
+  </body>
+</html>
